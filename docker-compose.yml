@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  # 1. SQL Database Container
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: store_sql_db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=storepassword
+      - POSTGRES_DB=store_db
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - workshop_net
+
+  # 2. Go App Backend Container
+  store_backend:
+    build: .
+    container_name: store_go_api
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:storepassword@postgres_db:5432/store_db?sslmode=disable
+    depends_on:
+      - postgres_db
+    networks:
+      - workshop_net
+
+# Linux Custom Bridge Network (Isolation ke liye)
+networks:
+  workshop_net:
+    driver: bridge
