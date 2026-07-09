@@ -2,25 +2,28 @@ pipeline {
     agent any
     
     stages {
-        stage('SCM Checkout') {
+        stage('Grab Latest Code') {
             steps {
-                echo 'Pulling latest code from GitHub...'
+                
+                echo 'Pulling the latest updates from GitHub...'
                 checkout scm
             }
         }
         
-        stage('Docker Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building Multi-Stage Docker Image...'
-                sh 'docker compose build'
+               
+                echo 'Starting the multi-stage docker build for the app...'
+                sh 'docker build -t inventory-app:latest .'
             }
         }
         
-        stage('Infrastructure Deploy') {
+        stage('Fresh Deployment') {
             steps {
-                echo 'Deploying Go API and Postgres Database Containers...'
-                sh 'docker compose down'
-                sh 'docker compose up -d'
+                
+                echo 'Clearing out old instances and spinning up the updated container...'
+                sh 'docker rm -f inventory-app-container || true'
+                sh 'docker run -d --name inventory-app-container -p 8080:8080 inventory-app:latest'
             }
         }
     }
